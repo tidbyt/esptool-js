@@ -20,7 +20,7 @@ const alertDiv = document.getElementById('alertDiv');
 import { Transport } from './webserial.js'
 import { ESPLoader } from './ESPLoader.js'
 
-let term = new Terminal({cols:120, rows:40});
+let term = new Terminal({ cols: 120, rows: 40 });
 term.open(terminal);
 
 let device = null;
@@ -38,27 +38,27 @@ filesDiv.style.display = "none";
 
 
 function convertUint8ArrayToBinaryString(u8Array) {
-	var i, len = u8Array.length, b_str = "";
-	for (i=0; i<len; i++) {
-		b_str += String.fromCharCode(u8Array[i]);
-	}
-	return b_str;
+    var i, len = u8Array.length, b_str = "";
+    for (i = 0; i < len; i++) {
+        b_str += String.fromCharCode(u8Array[i]);
+    }
+    return b_str;
 }
 
 function convertBinaryStringToUint8Array(bStr) {
-	var i, len = bStr.length, u8_array = new Uint8Array(len);
-	for (var i = 0; i < len; i++) {
-		u8_array[i] = bStr.charCodeAt(i);
-	}
-	return u8_array;
+    var i, len = bStr.length, u8_array = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+        u8_array[i] = bStr.charCodeAt(i);
+    }
+    return u8_array;
 }
 
 function handleFileSelect(evt) {
     var file = evt.target.files[0];
     var reader = new FileReader();
 
-    reader.onload = (function(theFile) {
-        return function(e) {
+    reader.onload = (function (theFile) {
+        return function (e) {
             file1 = e.target.result;
             evt.target.data = file1;
         };
@@ -75,13 +75,13 @@ function _sleep(ms) {
 }
 
 connectButton.onclick = async () => {
-//    device = await navigator.usb.requestDevice({
-//        filters: [{ vendorId: 0x10c4 }]
-//    });
+    //    device = await navigator.usb.requestDevice({
+    //        filters: [{ vendorId: 0x10c4 }]
+    //    });
 
     if (device === null) {
         device = await navigator.serial.requestPort({
-            filters: [{ usbVendorId: 0x10c4 }]
+            filters: [{ usbVendorId: 0x10c4 }, { usbVendorId: 0x1a86 }]
         });
         transport = new Transport(device);
     }
@@ -93,7 +93,7 @@ connectButton.onclick = async () => {
         chip = await esploader.main_fn();
 
         await esploader.flash_id();
-    } catch(e) {
+    } catch (e) {
     }
 
     console.log("Settings done for :" + chip);
@@ -130,7 +130,7 @@ eraseButton.onclick = async () => {
 addFile.onclick = async () => {
     var rowCount = table.rows.length;
     var row = table.insertRow(rowCount);
-    
+
     //Column 1 - Offset
     var cell1 = row.insertCell(0);
     var element1 = document.createElement("input");
@@ -138,7 +138,7 @@ addFile.onclick = async () => {
     element1.id = "offset" + rowCount;
     element1.setAttribute('value', '0x8000');
     cell1.appendChild(element1);
-    
+
     // Column 2 - File selector
     var cell2 = row.insertCell(1);
     var element2 = document.createElement("input");
@@ -147,7 +147,7 @@ addFile.onclick = async () => {
     element2.name = "selected_File" + rowCount;
     element2.addEventListener('change', handleFileSelect, false);
     cell2.appendChild(element2);
-    
+
     // Column 3  - Remove File
     var cell3 = row.insertCell(2);
     var element3 = document.createElement("input");
@@ -156,8 +156,8 @@ addFile.onclick = async () => {
     element3.name = btnName;
     element3.setAttribute('class', "btn");
     element3.setAttribute('value', 'Remove'); // or element1.value = "button";
-    element3.onclick = function() {
-            removeRow(btnName);
+    element3.onclick = function () {
+        removeRow(btnName);
     }
     cell3.appendChild(element3);
 }
@@ -227,9 +227,9 @@ function validate_program_inputs() {
     var row;
     let offset = 0;
     let fileData = null;
- 
+
     // check for mandatory fields
-    for (let index = 1; index < rowCount; index ++) {
+    for (let index = 1; index < rowCount; index++) {
         row = table.rows[index];
 
         //offset fields checks
@@ -255,27 +255,23 @@ function validate_program_inputs() {
 }
 
 programButton.onclick = async () => {
-    var err = validate_program_inputs();
-    if (err != "success") {
-        const alertMsg = document.getElementById("alertmsg");
-        alertMsg.innerHTML = "<strong>" + err + "</strong>";
-        alertDiv.style.display = "block";
-        return;
+    // read contents of firmware into memory
+    const res = await fetch('./assets/0e000-26196.bin');
+
+    // get binary string from response body
+    const firmware = await res.blob();
+    const reader = new FileReader();
+
+    reader.onload = function (evt) {
+        let fileArr = [{
+            address: 0xe000,
+            data: evt.target.result,
+        }];
+
+        esploader.write_flash({ fileArray: fileArr, flash_size: 'keep' });
     }
 
-    let fileArr = [];
-    let offset = 0x1000;
-    var rowCount = table.rows.length;
-    var row;
-    for (let index = 1; index < rowCount; index ++) {
-        row = table.rows[index];
-        var offSetObj = row.cells[0].childNodes[0];
-        offset = parseInt(offSetObj.value);
-
-        var fileObj = row.cells[1].childNodes[0];
-       
-        fileArr.push({data:fileObj.data, address:offset});
-    }
-    esploader.write_flash({fileArray: fileArr, flash_size: 'keep'});
-   
+    reader.readAsBinaryString(firmware, {
+        type: 'application/octet-stream'
+    });
 }

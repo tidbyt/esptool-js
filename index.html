@@ -22,19 +22,22 @@
         <div class="container" id="main">
             <hr/>
             <div id="program" style="display:none">
-                <h3> Program </h3>
-                <label for="baudrates" id="lblBaudrate">Baudrate:</label>
+                <h3> Fix your Tidbyt </h3>
+                <label for="baudrates" id="lblBaudrate" style="visibility: hidden">Baudrate:</label>
                 <label style="display:none" id="lblConnTo">Connected to device: </label>
-                <select name="baudrates" id="baudrates">
+                <select name="baudrates" id="baudrates" style="visibility:hidden">
                     <option value="921600">921600</option>
-                    <option value="460800">460800</option>
+                    <option value="460800" selected>460800</option>
                     <option value="230400">230400</option>
                     <option value="115200">115200</option>
                 </select>
 
-                <input class="btn btn-info btn-sm" type="button" id="connectButton" value="Connect" />
+                <br>
+                <input class="btn btn-info btn-lg" type="button" id="connectButton" value="Connect to Tidbyt" />
+                <div style="display:none">
                 <input class="btn btn-warning btn-sm" type="button" id="disconnectButton" value="Disconnect" />
                 <input class="btn btn-danger btn-sm" type="button" id="eraseButton" value="Erase Flash" />
+                </div>
                 <br>
 
                 <div class="alert alert-danger alert-dismissible" id="alertDiv" style="display:none; margin-top:10px">
@@ -43,7 +46,7 @@
                 </div>
 
                 <div id="files">
-                    <table class="table table-striped" id="fileTable">
+                    <table class="table table-striped" id="fileTable" style="display:none">
                         <thead class="thead-light">
                             <tr>
                                 <th>Flash Address</th>
@@ -59,8 +62,8 @@
                             </tr>
                         </tbody>
                     </table>
-                    <input class="btn btn-info btn-sm" type="button" id="addFile" value="Add File" />
-                    <input class="btn btn-info btn-sm" type="button" id="programButton" value="Program" />
+                    <input class="btn btn-info btn-sm" type="button" id="addFile" value="Add File" style="display: none" />
+                    <input class="btn btn-info btn-lg" type="button" id="programButton" value="Fix it" />
                 </div>
                 <output id="list"></output>
                 <hr/>
@@ -86,6 +89,13 @@
             {
                document.getElementById("safariErr").style.display = "inline";
                document.getElementById("main").style.display = "none";
+            }
+
+            // check for the "fix" query parameter
+            var urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("fix") == "20230825") {
+                document.getElementById("program").style.display = "inline";
+                document.getElementById("console").style.display = "none";
             }
         </script>
     </body>

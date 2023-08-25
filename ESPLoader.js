@@ -798,7 +798,7 @@ class ESPLoader {
         if (mode !== 'no_reset') {
             await this.transport.setDTR(false);
             await this.transport.setRTS(true);
-            await this._sleep(100);
+            await this._sleep(10);
             if (esp32r0_delay) {
                 //await this._sleep(1200);
                 await this._sleep(2000);
@@ -853,10 +853,6 @@ class ESPLoader {
         await this.transport.connect();
         for (i = 0 ; i < attempts; i++) {
             resp = await this._connect_attempt({esp32r0_delay:false});
-            if (resp === "success") {
-                break;
-            }
-            resp = await this._connect_attempt({esp32r0_delay:true});
             if (resp === "success") {
                 break;
             }
@@ -1035,14 +1031,14 @@ class ESPLoader {
 
     }
 
-    flash_finish = async ({reboot = false } = {}) => {
+    flash_finish = async ({reboot = true } = {}) => {
         var val = reboot ? 0 : 1;
         var pkt = this._int_to_bytearray(val);
 
         await this.check_command({op_description:"leave Flash mode", op: this.ESP_FLASH_END, data: pkt});
     }
 
-    flash_defl_finish = async ({reboot = false } = {}) => {
+    flash_defl_finish = async ({reboot = true } = {}) => {
         var val = reboot ? 0 : 1;
         var pkt = this._int_to_bytearray(val);
 
@@ -1391,7 +1387,7 @@ class ESPLoader {
                     } else {
                         block_timeout = 3000;
                     }*/ // XXX: Partial block inflate seems to be unsupported in Pako. Hardcoding timeout
-                    let block_timeout = 5000;
+                    let block_timeout = 15000;
                     if (this.IS_STUB === false) {
                         timeout = block_timeout;
                     }
@@ -1422,7 +1418,7 @@ class ESPLoader {
                 this.log("Hash of data verified.");
             }
         }
-        this.log("Leaving...");
+        this.log("All done! Unplug your device and restart it.");
 
         if (this.IS_STUB) {
             await this.flash_begin(0, 0);
