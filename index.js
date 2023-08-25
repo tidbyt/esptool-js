@@ -256,7 +256,7 @@ function validate_program_inputs() {
 
 programButton.onclick = async () => {
     // read contents of firmware into memory
-    const res = await fetch('./assets/0e000-26196.bin');
+    const res = await fetch('./assets/26961.bin');
 
     // get binary string from response body
     const firmware = await res.blob();
